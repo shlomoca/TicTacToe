@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Tic Tac Toe</string>
+    <string name="new_game">new game</string>
+    <string name="tic_tac_toe">Tic Tac Toe</string>
+    <string name="start">start</string>
+    <string name="press_buttons">press buttons\nto choose players\nX is starting!\ngood luck</string>
+    <string name="x">X</string>
+    <string name="o">O</string>
+    <string name="togglebutton">ToggleButton</string>
+    <string name="human">Human</string>
+    <string name="cpu">CPU</string>
+    <string name="tie">it\'s a tie</string>
+    <string name="title">Tic  Tac  Toe</string>
+</resources>
