@@ -1,4 +1,7 @@
 package com.example.shlomo.tictactoe;
+
+import android.util.Size;
+
 /*TicTacToeGame is a game of tic tac toe using the minimax algorithm.
 minimax algorithm checks the best moves that someone can play by checking all of the rivals best counter moves.
 the rival counter moves are calculated by the bast move that the individual plays and so on in recursion.
@@ -25,7 +28,28 @@ public class TicTacToeGame {
         }
         turn = X;
     }
-
+    public TicTacToeGame(String str) {
+        int count=0;
+        board = new int[SIZE][SIZE];
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = i; j < SIZE; j++) {
+                char horizontal = str.charAt(i);
+                char vertical =str.charAt((i/SIZE)*SIZE+i%SIZE) ;
+                if(horizontal!='-') {
+                    board[i][j]= horizontal =='X'?X:O;
+                    count ++;
+                }
+                else
+                if(vertical!='-'){
+                    board[j][i] =vertical =='X'?X:O ;
+                    count++;
+                }
+                else
+                    board[i][j]=EMPTY;
+            }
+        }
+        turn = count%2==0?X:O;
+    }
     /*
     humanMove gets an order from a human and checks if it is valid.
     if so it will put it on the board and notify the user by the following return values:
@@ -39,10 +63,10 @@ public class TicTacToeGame {
         action[1] = turn;
         if (didWin(this.board, turn))
             action[0] = turn;
-        else if (!isValid(r, c, this.board))
-            action[0] = -1;
         else if (available == 0)
             action[0] = 2;
+        else if (!isValid(r, c, this.board))
+            action[0] = -1;
         else {
             this.board[r][c] = turn;
             action[0] = 3;

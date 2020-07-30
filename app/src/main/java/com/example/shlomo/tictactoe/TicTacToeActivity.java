@@ -1,7 +1,9 @@
 package com.example.shlomo.tictactoe;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -26,7 +28,6 @@ public class TicTacToeActivity extends AppCompatActivity implements View.OnClick
     ImageButton back;
     TextView title;
     TicTacToeGame game;
-    boolean TurnInProgress ;
 
     int[] players=new int[2] ;
     final int O=0,X=1,CPU=2,HUMAN=3,TIE=2;
@@ -80,28 +81,65 @@ public class TicTacToeActivity extends AppCompatActivity implements View.OnClick
         //get user data about the player
         players[0]= (intent.getBooleanExtra(EntryActivity.XINPUT,true))? HUMAN:CPU;
         players[1]= (intent.getBooleanExtra(EntryActivity.OINPUT,true))? HUMAN:CPU;
-        getWindow().getDecorView().post(new Runnable() {//makes sure the view refreshes before the cpu starts playing
-            @Override
-            public void run() {
-                reStartGame();
-            }
-        });
     }
+    protected void onStart() {
+        super.onStart();
+                StartGame();
 
-
+    }
+        protected void onDestroy() {
+            super.onDestroy();
+            SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
+            SharedPreferences.Editor editor = pref.edit();
+            editor.putString("saving", serialize());
+            editor.commit();
+        }
     private void reStartGame(){//starting a new game
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
+        String str =pref.getString("saving", "----------");
+        player0active=true;
+        player1active=false;
+        gameEnd=false;
         game = new TicTacToeGame();
         title.setText(R.string.title);
         for(Button b:list){
             b.setText("");
             b.setOnClickListener(this);
         }
-        TurnInProgress =false;
-        player0active=true;
-        player1active=false;
+        if(((player0active && players[0] == CPU) || (player1active && players[1] == CPU))&&!gameEnd){
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    computerGame();
+                }
+            }, 2000);
+        }
+
+        else
+            Toast.makeText(this, "Xs turn", Toast.LENGTH_SHORT).show();
+
+    }
+    private void StartGame(){//starting a new game
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
+        String str =pref.getString("saving", "----------");
+        player0active=deSerialize(str);
+        player1active=!player0active;
+        game = new TicTacToeGame(str);
+        title.setText(R.string.title);
+        for(Button b:list){
+            b.setOnClickListener(this);
+        }
         gameEnd=false;
-        if(players[0]==CPU)
-           computerGame();
+        if((player0active && players[0] == CPU) || (player1active && players[1] == CPU)){
+
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    computerGame();
+                }
+            }, 2000);
+        }
+
         else
             Toast.makeText(this, "Xs turn", Toast.LENGTH_SHORT).show();
 
@@ -128,7 +166,7 @@ public class TicTacToeActivity extends AppCompatActivity implements View.OnClick
         }
     }
 
-    @Override
+        @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.back://send back the Entry activity's toggle values
@@ -139,12 +177,13 @@ public class TicTacToeActivity extends AppCompatActivity implements View.OnClick
                 finish();
            return;
             case R.id.reset:
+     getApplicationContext().getSharedPreferences("MyPref", 0).edit().clear(); //clear sheared preferences
                 reStartGame();
                 return;
         }
 
-         if(((player0active&&players[0]==HUMAN)||(player1active&&players[1]==HUMAN))&&!TurnInProgress){ //if it is a human player's turn
-             TurnInProgress=true;
+         if(((player0active&&players[0]==HUMAN)||(player1active&&players[1]==HUMAN))){//&&!TurnInProgress){ //if it is a human player's turn
+            // TurnInProgress=true;
              findViewById(v.getId()).setOnClickListener(null);
         switch (v.getId()) {
             case R.id.tl:
@@ -176,7 +215,7 @@ public class TicTacToeActivity extends AppCompatActivity implements View.OnClick
                 break;
          }
         }
-        TurnInProgress=false;
+        //TurnInProgress=false;
     }
     //go will call a human move from the TicTacToeGame and will act according to the result
     private void go(int r,int c){
@@ -213,8 +252,16 @@ public class TicTacToeActivity extends AppCompatActivity implements View.OnClick
             gameOver(a[0]);
 
         if((player0active&&players[0]==CPU)||(player1active&&players[1]==CPU))//if the next player is a computer
-            computerGame();
+        {
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    computerGame();
+                }
+            }, 2000);
+        }
     }
+
 //marks the button that represents the move and switches active player
     private void mark(int r,int c, int symbol) {
      int loc=r*game.SIZE+c;
@@ -252,4 +299,28 @@ public class TicTacToeActivity extends AppCompatActivity implements View.OnClick
         }
 
     }
+    private String serialize(){
+        String str="";
+        for(Button b:list){
+             if(b.getText().equals(""))
+                 str+="-";
+             else
+                 str+=b.getText();
+        }
+        return str;
+    }
+    private boolean deSerialize(String str) {
+        boolean player0=true;
+        for (int i = 0; i < game.SIZE * game.SIZE; i++) {
+            if (str.charAt(i) == '-')
+                list.get(i).setText("");
+            else{
+                list.get(i).setText(str.charAt(i));
+                player0=!player0;
+            }
+        }
+        return player0;
+    }
+
+
 }
